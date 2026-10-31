@@ -1,0 +1,39 @@
+# Adapted from Homebrew/brew tap-new-tests.yml at a687be2936783f7370161225bd36b29ff30fa9a1.
+# This tap distributes casks, so formula bottle building/publishing is not applicable.
+name: Tap syntax
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash -xeuo pipefail {0}
+
+jobs:
+  syntax:
+    runs-on: macos-15
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@d482da0e602890d3160aade42e72c8556103bf04 # 2026.10.26.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cache Homebrew Bundler RubyGems
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: macos-15-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: macos-15-rubygems-
+      - run: brew test-bot --only-cleanup-before
+      - run: brew test-bot --only-setup
+      - run: brew test-bot --only-tap-syntax
